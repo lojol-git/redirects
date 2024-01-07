@@ -17,12 +17,12 @@ redirects:
 package main
 
 import (
-    "https://github.com/lojol-git/redirects/"
-    "github.com/gorilla/mux"
+   "https://github.com/lojol-git/redirects/"
+   "github.com/gorilla/mux"
 )
 
 func main() {
-    r := mux.NewRouter()
-    r.Use(redirects.Run)
-    // rest of your code
+  r := mux.NewRouter()
+  r.Use(redirects.Run)
+  // rest of your code
 }
