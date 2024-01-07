@@ -19,7 +19,7 @@ package main
 
 import (  
 &nbsp;&nbsp;&nbsp;&nbsp;"log"  
-&nbsp;&nbsp;&nbsp;&nbsp;"https://github.com/lojol-git/redirects/"  
+&nbsp;&nbsp;&nbsp;&nbsp;"github.com/lojol-git/redirects/"  
 &nbsp;&nbsp;&nbsp;&nbsp;"github.com/gorilla/mux"  
 )
 
