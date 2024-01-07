@@ -2,7 +2,16 @@ A very simple redirect package that works with gorilla/mux.
 
 It pulls from a redirects.yml, supports different status codes and wildcards.
 
-Add this to your main.go router:
+** structure a "redirects.yml" file like this:**
+redirects:
+  - from: "/old-path/(.*)"
+    to: "/new-path?new=$1"
+    status: 301
+  - from: /another-old-path
+    to: /another-new-path
+    status: 301
+
+**Add this to your main.go router:**
 
 // main.go
 package main
