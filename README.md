@@ -18,15 +18,15 @@ redirects:
 package main
 
 import (  
-"log"  
-"https://github.com/lojol-git/redirects/"  
-"github.com/gorilla/mux"  
+&nbsp;&nbsp;&nbsp;&nbsp;"log"  
+&nbsp;&nbsp;&nbsp;&nbsp;"https://github.com/lojol-git/redirects/"  
+&nbsp;&nbsp;&nbsp;&nbsp;"github.com/gorilla/mux"  
 )
 
 func main() {  
- err := redirects.Load("redirects.yml")  
- if err != nil {  
- log.Fatalf("Failed to load redirects: %v", err)  
+&nbsp;&nbsp;&nbsp;&nbsp;err := redirects.Load("redirects.yml")  
+&nbsp;&nbsp;&nbsp;&nbsp;if err != nil {  
+&nbsp;&nbsp;&nbsp;&nbsp;log.Fatalf("Failed to load redirects: %v", err)  
 }
 
 r := mux.NewRouter()
