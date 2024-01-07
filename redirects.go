@@ -24,6 +24,8 @@ type Redirect struct {
 	Status int    `yaml:"status"`
 }
 
+var redirectsList Redirects
+
 func (r *Redirects) Load(filename string) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
@@ -37,7 +39,7 @@ func (r *Redirects) Load(filename string) error {
 }
 
 func (r *Redirects) Run(w http.ResponseWriter, req *http.Request) bool {
-	for _, redirect := range r.Redirects {
+	for _, redirect := range redirectsList.Redirects {
 		var match bool
 		var err error
 
