@@ -1,0 +1,7 @@
+redirects:
+  - from: "/old-path/(.*)"
+    to: "/new-path?new=$1"
+    status: 301
+  - from: /another-old-path
+    to: /another-new-path
+    status: 301
