@@ -1,10 +1,15 @@
+// File: redirects/redirects.go
+
 package redirects
 
 import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -19,40 +24,60 @@ type Redirect struct {
 	Status int    `yaml:"status"`
 }
 
-var redirects Redirects
-
-func Load(filename string) error {
-	f, err := os.Open(filename)
+func (r *Redirects) Load(filename string) error {
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&redirects)
+	err = yaml.Unmarshal(data, r)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func Run(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for _, redirect := range redirects.Redirects {
-			matched, err := regexp.MatchString(redirect.From, r.URL.Path)
-			if err != nil {
-				log.Printf("Error matching redirect: %v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+func (r *Redirects) Run(w http.ResponseWriter, req *http.Request) bool {
+	for _, redirect := range r.Redirects {
+		var match bool
+		var err error
+
+		if strings.Contains(redirect.From, "*") {
+			// Wildcard matching
+			match, err = path.Match(redirect.From, req.URL.Path)
+			if match {
+				to := strings.Replace(req.URL.Path, strings.TrimSuffix(redirect.From, "*"), redirect.To, 1)
+				to = strings.TrimSuffix(to, "/") // Remove trailing slash
+				log.Printf("Redirecting from %s to %s", req.URL.Path, to)
+				http.Redirect(w, req, to, redirect.Status)
+				return true
 			}
-			if matched {
-				to := regexp.MustCompile(redirect.From).ReplaceAllString(r.URL.Path, redirect.To)
-				log.Printf("Redirecting from %s to %s", r.URL.Path, to)
-				http.Redirect(w, r, to, redirect.Status)
-				return
+		} else {
+			// Exact matching
+			re, err := regexp.Compile("^" + redirect.From + "$")
+			if err != nil {
+				log.Printf("Error compiling regex: %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return false
+			}
+			match = re.MatchString(req.URL.Path)
+			if match {
+				matches := re.FindStringSubmatch(req.URL.Path)
+				to := redirect.To
+				for i, match := range matches[1:] {
+					to = strings.Replace(to, "$"+strconv.Itoa(i+1), match, -1)
+				}
+				to = strings.TrimSuffix(to, "/") // Remove trailing slash
+				log.Printf("Redirecting from %s to %s", req.URL.Path, to)
+				http.Redirect(w, req, to, redirect.Status)
+				return true
 			}
 		}
-		next.ServeHTTP(w, r)
-	})
+
+		if err != nil {
+			log.Printf("Error matching redirect: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return false
+		}
+	}
+	return false
 }
