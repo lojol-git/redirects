@@ -2,7 +2,7 @@ A very simple redirect package that works with gorilla/mux.
 
 It pulls from a redirects.yml, supports different status codes and wildcards.
 
-** structure a "redirects.yml" file like this:**
+**Structure a "redirects.yml" file like this:**
 redirects:
   - from: "/old-path/(.*)"
     to: "/new-path?new=$1"
