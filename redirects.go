@@ -1,6 +1,7 @@
 package redirects
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"regexp"
@@ -37,6 +38,7 @@ func Load(filename string) error {
 }
 
 func Run(next http.Handler) http.Handler {
+	fmt.Println("Redirects are running...")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for _, redirect := range redirects.Redirects {
 			matched, err := regexp.MatchString(redirect.From, r.URL.Path)
