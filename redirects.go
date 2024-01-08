@@ -1,7 +1,6 @@
 package redirects
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -39,7 +38,6 @@ func Load(filename string) error {
 }
 
 func Run(w http.ResponseWriter, req *http.Request) bool {
-	fmt.Println("Request: ", req.URL.Path)
 	for _, redirect := range redirectsList.Redirects {
 
 		// Replace "*" with "(.*)" to capture the wildcard parts
