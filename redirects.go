@@ -41,6 +41,8 @@ func Load(filename string) error {
 func Run(w http.ResponseWriter, req *http.Request) bool {
 	fmt.Println("Request: ", req.URL.Path)
 	for _, redirect := range redirectsList.Redirects {
+		fmt.Println("-----------------------------------")
+		fmt.Println("Redirect: ", redirect.From)
 
 		// Replace "*" with "(.*)" to capture the wildcard parts
 		pattern := redirect.From
@@ -67,6 +69,9 @@ func Run(w http.ResponseWriter, req *http.Request) bool {
 			// Remove trailing slash
 			to = strings.TrimSuffix(to, "/")
 
+			log.Printf("Redirecting from %s to %s", req.URL.Path, to)
+			fmt.Println("^^^^^^^^^^^SUCCESS^^^^^^^^^^^^^^^")
+			fmt.Println("^^^^^^^^^^^SUCCESS^^^^^^^^^^^^^^^")
 			http.Redirect(w, req, to, redirect.Status)
 			return true
 		}
