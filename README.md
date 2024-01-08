@@ -8,10 +8,13 @@ First, define your redirects in a YAML file. Each redirect should have a `from` 
 
 ```yaml
 redirects:
-  - from: /old-path
-    to: /new-path
+  - from: '/old-path/(.*)'
+    to: '/new-path?new=$1'
     status: 301
   - from: /another-old-path
     to: /another-new-path
+    status: 301
+  - from: /everything/(.*)/(.*)/(.*)/(.*)
+    to: /?one=$1&two=$2&three=$3&four=$4
     status: 301
 ```
