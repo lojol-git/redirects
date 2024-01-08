@@ -1,12 +1,10 @@
-// File: redirects/redirects.go
-
 package redirects
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -26,60 +24,54 @@ type Redirect struct {
 
 var redirectsList Redirects
 
-func (r *Redirects) Load(filename string) error {
+func Load(filename string) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(data, r)
+
+	err = yaml.Unmarshal(data, &redirectsList)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (r *Redirects) Run(w http.ResponseWriter, req *http.Request) bool {
+func Run(w http.ResponseWriter, req *http.Request) bool {
+	fmt.Println("Request: ", req.URL.Path)
 	for _, redirect := range redirectsList.Redirects {
-		var match bool
-		var err error
 
-		if strings.Contains(redirect.From, "*") {
-			// Wildcard matching
-			match, err = path.Match(redirect.From, req.URL.Path)
-			if match {
-				to := strings.Replace(req.URL.Path, strings.TrimSuffix(redirect.From, "*"), redirect.To, 1)
-				to = strings.TrimSuffix(to, "/") // Remove trailing slash
-				log.Printf("Redirecting from %s to %s", req.URL.Path, to)
-				http.Redirect(w, req, to, redirect.Status)
-				return true
-			}
-		} else {
-			// Exact matching
-			re, err := regexp.Compile("^" + redirect.From + "$")
-			if err != nil {
-				log.Printf("Error compiling regex: %v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return false
-			}
-			match = re.MatchString(req.URL.Path)
-			if match {
-				matches := re.FindStringSubmatch(req.URL.Path)
-				to := redirect.To
-				for i, match := range matches[1:] {
-					to = strings.Replace(to, "$"+strconv.Itoa(i+1), match, -1)
-				}
-				to = strings.TrimSuffix(to, "/") // Remove trailing slash
-				log.Printf("Redirecting from %s to %s", req.URL.Path, to)
-				http.Redirect(w, req, to, redirect.Status)
-				return true
-			}
+		// Replace "*" with "(.*)" to capture the wildcard parts
+		pattern := redirect.From
+		if !strings.Contains(pattern, "(.*)") {
+			pattern = strings.ReplaceAll(pattern, "*", "([^/]*)")
 		}
-
+		// Compile the regex
+		re, err := regexp.Compile("^" + pattern + "$")
 		if err != nil {
-			log.Printf("Error matching redirect: %v", err)
+			log.Printf("Error compiling regex: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return false
 		}
+
+		// Check if the request path matches the regex
+		matches := re.FindStringSubmatch(req.URL.Path)
+		if matches != nil {
+			// Replace "$1", "$2", etc. in the redirect.To with the captured parts
+			to := redirect.To
+			for i, match := range matches[1:] {
+				to = strings.Replace(to, "$"+strconv.Itoa(i+1), match, -1)
+			}
+
+			// Remove trailing slash
+			to = strings.TrimSuffix(to, "/")
+
+			http.Redirect(w, req, to, redirect.Status)
+			return true
+		}
 	}
+
+	// No matching redirect was found
 	return false
 }
